@@ -1,6 +1,7 @@
 package com.Gateway.Config;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
@@ -8,9 +9,11 @@ import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
+import java.nio.charset.StandardCharsets;
 
 @Component
 public class JwtFilter implements GlobalFilter, Ordered {
@@ -20,11 +23,11 @@ public class JwtFilter implements GlobalFilter, Ordered {
 
     // Corrected whitelist - use consistent path patterns
     private static final String[] WHITELIST = {
-            "/users/auth/sendVerification",
-            "/users/auth/login",
-            "/users/auth/otpVerification",
-            "/users/createPassword",
-            "/users/auth/**"  // This should catch all auth endpoints
+            "/api/v1/users/auth/sendVerification",
+            "/api/v1/users/auth/login",
+            "/api/v1/users/auth/otpVerification",
+            "/api/v1/users/createPassword",
+//            "/api/v1/users/auth/**"
     };
 
     @Override
@@ -36,7 +39,6 @@ public class JwtFilter implements GlobalFilter, Ordered {
 
         System.out.println("JWT Filter - Path: " + path + ", Method: " + method);
 
-        // Skip JWT check for whitelisted paths
         if (isWhitelisted(path)) {
             System.out.println("Whitelisted path - skipping JWT validation: " + path);
             return chain.filter(exchange);
@@ -44,10 +46,11 @@ public class JwtFilter implements GlobalFilter, Ordered {
 
         System.out.println("Protected path - validating JWT: " + path);
 
-        // JWT validation for all other requests
         String authHeader = exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
+
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7);
+
             try {
                 Claims claims = Jwts.parserBuilder()
                         .setSigningKey(Keys.hmacShaKeyFor(SECRET.getBytes()))
@@ -68,27 +71,40 @@ public class JwtFilter implements GlobalFilter, Ordered {
                         .build();
 
                 System.out.println("JWT validation successful for user: " + email);
+                return chain.filter(exchange);
 
-            } catch (Exception e) {
-                System.out.println("JWT validation failed: " + e.getMessage());
-                exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
-                return exchange.getResponse().setComplete();
+            } catch (ExpiredJwtException e) {
+                System.out.println("JWT validation failed: Token Expired. " + e.getMessage());
+                return setErrorResponse(exchange, HttpStatus.UNAUTHORIZED, "Token Expired.");
+            }
+            catch (Exception e) {
+                System.out.println("JWT validation failed: Invalid Token. " + e.getMessage());
+                return setErrorResponse(exchange, HttpStatus.UNAUTHORIZED, "Invalid Token.");
             }
         } else {
-            System.out.println("No Authorization header found");
-            exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
-            return exchange.getResponse().setComplete();
+            System.out.println("No Authorization header found or malformed");
+            return setErrorResponse(exchange, HttpStatus.UNAUTHORIZED, "Authorization header is missing or invalid.");
         }
+    }
 
-        return chain.filter(exchange);
+    /**
+     * Helper method to set a specific error response.
+     */
+    private Mono<Void> setErrorResponse(ServerWebExchange exchange, HttpStatus status, String message) {
+        exchange.getResponse().setStatusCode(status);
+        exchange.getResponse().getHeaders().setContentType(MediaType.APPLICATION_JSON);
+
+        String errorJson = "{\"status\": " + status.value() + ", \"error\": \"" + status.getReasonPhrase() + "\", \"message\": \"" + message + "\"}";
+        byte[] bytes = errorJson.getBytes(StandardCharsets.UTF_8);
+
+        return exchange.getResponse().writeWith(
+                        Mono.just(exchange.getResponse().bufferFactory().wrap(bytes)))
+                .then(Mono.empty());
     }
 
     private boolean isWhitelisted(String path) {
         for (String endpoint : WHITELIST) {
-            // Exact match or starts with match for wildcard endpoints
-            if (path.equals(endpoint) ||
-                    (endpoint.endsWith("/**") && path.startsWith(endpoint.substring(0, endpoint.length() - 3))) ||
-                    path.startsWith(endpoint)) {
+            if (path.equals(endpoint) || path.startsWith(endpoint)) {
                 return true;
             }
         }
