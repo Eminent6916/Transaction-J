@@ -1,0 +1,23 @@
+spring:
+  application:
+    name: API-GATEWAY
+  cloud:
+    gateway:
+      routes:
+        - id: user-service
+          uri: lb://USER-SERVICE
+          predicates:
+            - Path=/users/**
+        - id: payment-service
+          uri: lb://TRANSACTION-SERVICE
+          predicates:
+            - Path=/api/v1/payments/**
+server:
+  port: 8080
+jwt:
+  secret: gt3gg4y783y4473443iep021wed
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
