@@ -1,10 +1,8 @@
 package com.UserService.Service.Implement;
 
+import com.UserService.Config.CustomUserDetailsService;
 import com.UserService.Constants.Messages;
-import com.UserService.Dto.Request.CreatePasswordRequest;
-import com.UserService.Dto.Request.LoginRequest;
-import com.UserService.Dto.Request.PersonalDataRequest;
-import com.UserService.Dto.Request.VerifyIdentityRequest;
+import com.UserService.Dto.Request.*;
 import com.UserService.Dto.Response.ApiResponse;
 import com.UserService.Dto.Response.JwtData;
 import com.UserService.Dto.Response.LoginResponse;
@@ -13,7 +11,6 @@ import com.UserService.Model.Tier;
 import com.UserService.Model.User;
 import com.UserService.Repository.TierRepository;
 import com.UserService.Repository.UserRepo;
-import com.UserService.Error.UserNotFoundException;
 import com.UserService.Service.UserServ;
 import com.UserService.Utils.Common;
 import com.UserService.Utils.JwtUtil;
@@ -22,6 +19,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Optional;
 
@@ -32,6 +31,8 @@ public class UserServImplement implements UserServ {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final TierRepository tierRepository;
+    private static final Logger logger = LoggerFactory.getLogger(CustomUserDetailsService.class);
+
 
     public UserServImplement(UserRepo userRepository, PasswordEncoder passwordEncoder, JwtUtil jwtUtil, TierRepository tierRepository) {
         this.userRepository = userRepository;
@@ -42,9 +43,8 @@ public class UserServImplement implements UserServ {
 
 
     @Override
-    public User fetchByEmail(String email) throws UserNotFoundException {
-        return userRepository.findByEmailIgnoreCase(email)
-                .orElseThrow(() -> new UserNotFoundException(Messages.INVALID_USER));
+    public Optional<User> fetchByEmail(String email) {
+        return userRepository.findByEmailIgnoreCase(email);
     }
 
     @Override
@@ -203,4 +203,61 @@ public class UserServImplement implements UserServ {
 
         return ResponseEntity.ok(ApiResponse.success(Messages.IDENTITY_SUBMITED, accountDetails));
     }
+
+
+    @Override
+    public ResponseEntity<ApiResponse<Object>> createPin(CreatePinRequest request) {
+            if (request.getPin() == null || request.getPin().trim().isEmpty()) {
+                return ResponseEntity.badRequest()
+                        .body(ApiResponse.error("PIN is required", null));
+            }
+
+            if (request.getPin().length() != 6) {
+                return ResponseEntity.badRequest()
+                        .body(ApiResponse.error("PIN must be exactly 6 digits", null));
+            }
+
+            if (!request.getPin().matches("\\d+")) {
+                return ResponseEntity.badRequest()
+                        .body(ApiResponse.error("PIN must contain only digits", null));
+            }
+
+            if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
+                return ResponseEntity.badRequest()
+                        .body(ApiResponse.error("Email is required", null));
+            }
+
+            // Find user by email
+            Optional<User> existingUserOpt = userRepository.findByEmail(request.getEmail());
+
+            if (existingUserOpt.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error(Messages.INVALID_USER, null));
+            }
+            User user =existingUserOpt.get();
+
+
+            if (user.getAccountDetails() == null) {
+                return ResponseEntity.badRequest()
+                        .body(ApiResponse.error("Account details not found. Please complete onboarding first.", null));
+            }
+
+            // Hash the PIN before storing (using BCrypt)
+            String hashedPin = passwordEncoder.encode(request.getPin());
+
+            // Update the PIN in account details
+            AccountDetails accountDetails = user.getAccountDetails();
+            accountDetails.setPin(hashedPin);
+
+            // Update user PIN status
+            user.setIsPinCreated(true);
+
+            user.setAccountDetails(accountDetails);
+            userRepository.save(user);
+
+
+            return ResponseEntity.ok()
+                    .body(ApiResponse.success("PIN created successfully",null));
+
+    }
+
 }

@@ -22,7 +22,7 @@ public class AuthController {
     @PostMapping("/sendVerification")
     public ResponseEntity<ApiResponse<VerifyMailResponse>> sendVerification(
             @RequestBody @Valid EmailVerificationRequest request) {
-        System.out.println("=== REACHED USER SERVICE ===");
+//        System.out.println("=== REACHED USER SERVICE ===");
         return verificationService.initiateVerification(request.getEmail());
     }
     @PostMapping("/otpVerification")
@@ -44,6 +44,10 @@ public class AuthController {
     @PostMapping("/verifyIdentity")
     public ResponseEntity<ApiResponse<Object>> verifyIdentity(@RequestBody @Valid VerifyIdentityRequest request){
         return userServ.verifyIdentity(request);
+    }
+    @PostMapping("/createPin")
+    public ResponseEntity<ApiResponse<Object>> createPin(@RequestBody @Valid CreatePinRequest request){
+        return userServ.createPin(request);
     }
 }
 

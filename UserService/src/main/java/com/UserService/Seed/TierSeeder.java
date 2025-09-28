@@ -31,7 +31,7 @@ public class TierSeeder implements CommandLineRunner {
                     .build();
 
             tierRepository.save(tier);
-            System.out.println("✅ Seeded Tier: " + name);
+            System.out.println("Seeded Tier: " + name);
         }
     }
 }

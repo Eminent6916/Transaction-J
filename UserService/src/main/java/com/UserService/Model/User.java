@@ -84,6 +84,7 @@ public class User {
     private BigDecimal dailyTransactionLimit = BigDecimal.ZERO;
 
     @Enumerated(EnumType.STRING)
+
     @Column(nullable = false)
     private UserRole role;
 
@@ -114,4 +115,5 @@ public class User {
             details.setUser(this);
         }
     }
+
 }

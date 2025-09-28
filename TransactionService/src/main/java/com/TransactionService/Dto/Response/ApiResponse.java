@@ -1,4 +1,4 @@
-package com.UserService.Dto.Response;
+package com.TransactionService.Dto.Response;
 
 public class ApiResponse<any> {
     private final boolean success;
@@ -21,7 +21,7 @@ public class ApiResponse<any> {
         return new ApiResponse<>(true,message,data);
     }
 
-    public static <any> ApiResponse<any> error(String message, any data){
+    public static <any> ApiResponse<any> error(String message,any data){
         return new ApiResponse<>(false, message, data);
     }
 

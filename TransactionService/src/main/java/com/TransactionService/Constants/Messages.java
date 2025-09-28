@@ -31,4 +31,5 @@ public class Messages {
     public static final String PROFILE_NOT_COMPLETED = "Identity verification failed. Kindly complete profile setup";
     public static final String INVALID_BVN = "Invalid BVN";
     public static final String IDENTITY_SUBMITED = "Identity submitted await approval";
+    public static final String SUCCESSFUL = "Successful";
 }

@@ -24,3 +24,6 @@ logging:
 
 jwt:
   secret: ThisIsMyLongSecureSecretKeyThatIs32Bytes
+
+service:
+  internal-auth-token: "VERY_LONG_AND_COMPLEX_INTERNAL_SERVICE_KEY_12345"

@@ -40,14 +40,14 @@ public class SecurityConfig {
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
-                .authorizeHttpRequests(authz -> authz
+                .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/users/auth/otpVerification",
                                 "/users/auth/createPassword",
                                 "/users/auth/sendVerification",
                                 "/users/auth/login",
-                                "/users/auth/personalDetails",
-                                "/users/auth/**",
+//                                "/users/auth/personalDetails",
+//                                "/users/auth/**",
                                 "/test/**",
                                 "/error"
                         ).permitAll()

@@ -38,7 +38,6 @@ public class Tier {
     @LastModifiedDate
     private LocalDateTime updated_at;
 
-    // ✅ Only required fields in builder
     @Builder
     public Tier(String name,
                 BigDecimal daily_limit,

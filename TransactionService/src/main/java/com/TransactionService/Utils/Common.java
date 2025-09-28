@@ -1,5 +1,4 @@
-package com.UserService.Utils;
-
+package com.TransactionService.Utils;
 
 import java.security.SecureRandom;
 import java.util.Base64;
@@ -15,7 +14,21 @@ public class Common {
         return base64Encoder.encodeToString(randomBytes);
     }
 
-    public static Boolean bvnValidator(String bvn) {
+    public static double getTransactionLimit(Long user_id){
+        //make request to user to fetchLimit
+        return 50000.00;
+    }
+
+    public static Boolean pinVerify(String pin){
         return true;
     }
+
+    public static void notificationNotify(String title, String message){
+       //call notification service
+    }
+
+//    public static Object processPayment(){
+//
+//    }
+
 }

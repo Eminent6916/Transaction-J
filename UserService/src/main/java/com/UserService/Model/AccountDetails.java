@@ -68,11 +68,9 @@ public class AccountDetails {
 
     @PrePersist
     protected void onCreate() {
-        // Set both timestamps when the entity is first saved
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
 
-        // Optional: Keep the default Tier logic here if needed
         // if (this.tier == null) {
         //     this.tier = Tier.builder().id(1).build();
         // }

@@ -1,6 +1,5 @@
-package com.UserService.Utils;
+package com.TransactionService.Utils;
 
-import com.UserService.Dto.Response.JwtData;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -18,21 +17,6 @@ public class JwtUtil {
 
     @Value("${jwt.secret}")
     private String secret;
-
-
-    public String generateToken(JwtData payload) {
-        return Jwts.builder()
-                .setSubject(payload.getEmail())
-                .claim("id", payload.getId())
-                .claim("status", payload.getStatus())
-                .claim("isPinCreated", payload.getIsEmailVerified())
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60))
-                .signWith(Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8)), SignatureAlgorithm.HS256)
-                .compact();
-    }
-
-
 
 
     public String extractUsername(String token) {

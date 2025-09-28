@@ -41,11 +41,18 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(authz -> authz
-                        .requestMatchers(
-                                "/payment/public/**"
-                        ).permitAll()
+                                .requestMatchers(
+//                                        "/users/auth/otpVerification",
+//                                        "/users/auth/createPassword",
+//                                        "/users/auth/sendVerification",
+//                                        "/users/auth/login",
+//                                "/users/auth/personalDetails",
+//                                        "/payments/**",
+                                        "/test/**",
+                                        "/error"
+                                ).permitAll()
 
-                        .anyRequest().authenticated()
+                                .anyRequest().authenticated()
                 )
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable);
